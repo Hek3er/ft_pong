@@ -1,3 +1,3 @@
 export interface getNameInterface {
-  name: string;
+  username: string;
 }

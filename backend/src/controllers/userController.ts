@@ -35,16 +35,24 @@ export const createUser = async (
     return res.code(400).send(errorMessages);
   }
   try {
-    const { name, email, password } = req.body;
+    const { username, email, password } = req.body;
     const hash = await hashPassword(password);
 
     await server.db.run(
-      "INSERT INTO users (name, email, password) VALUES(?, ?, ?)",
-      name,
+      "INSERT INTO users (username, email, password) VALUES(?, ?, ?)",
+      username,
       email,
       hash
     );
-    res.code(201).send({ message: "user created" });
+
+    const user = {
+      username: username,
+      email: email,
+    };
+
+    const token = server.jwt.sign(user);
+
+    res.code(201).send(token);
   } catch (err) {
     console.error(err);
     res.code(500).send({ message: "failed to create user" });
@@ -56,14 +64,14 @@ export const getUserByName = async (
   res: FastifyReply,
   server: FastifyInstance
 ) => {
-  const { name } = req.params;
-  if (!name) {
-    res.code(400).send({ message: "Name parameter is required." });
+  const { username } = req.params;
+  if (!username) {
+    res.code(400).send({ message: "Username parameter is required." });
   }
   try {
     const user = await server.db.get(
-      "SELECT * FROM users WHERE name = ?",
-      name
+      "SELECT * FROM users WHERE username = ?",
+      username
     );
     console.log(user);
     if (!user) {

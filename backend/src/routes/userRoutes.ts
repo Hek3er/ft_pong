@@ -14,7 +14,7 @@ export const handleRoutes = (server: FastifyInstance) => {
     getUsers(req, res, server);
   });
   server.get(
-    "/search/:name",
+    "/search/:username",
     (req: FastifyRequest<{ Params: getNameInterface }>, res) => {
       getUserByName(req, res, server);
     }
