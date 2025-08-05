@@ -1,8 +1,10 @@
 import fastify from "fastify";
+import dotenv from "dotenv";
 import { fpSqlitePlugin } from "fastify-sqlite-typed";
 import { handleRoutes } from "./routes/userRoutes.js";
 import { initDatabase } from "./config/db.js";
 
+dotenv.config();
 const server = fastify({ logger: true });
 
 server.register(fpSqlitePlugin, { dbFilename: "data.db" });

@@ -1,6 +1,8 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { loginSchema, type loginSchemaType } from "../schemas/loginSchema.js";
 import * as z from "zod";
+import type { getNameInterface } from "../types/userTypes.js";
+import { hashPassword } from "../utils/hashing.js";
 
 export const healthcheck = (req: FastifyRequest, res: FastifyReply) => {
   return { message: "success" };
@@ -34,14 +36,42 @@ export const createUser = async (
   }
   try {
     const { name, email, password } = req.body;
+    const hash = await hashPassword(password);
+
     await server.db.run(
       "INSERT INTO users (name, email, password) VALUES(?, ?, ?)",
       name,
       email,
-      password
+      hash
     );
     res.code(201).send({ message: "user created" });
   } catch (err) {
+    console.error(err);
     res.code(500).send({ message: "failed to create user" });
+  }
+};
+
+export const getUserByName = async (
+  req: FastifyRequest<{ Params: getNameInterface }>,
+  res: FastifyReply,
+  server: FastifyInstance
+) => {
+  const { name } = req.params;
+  if (!name) {
+    res.code(400).send({ message: "Name parameter is required." });
+  }
+  try {
+    const user = await server.db.get(
+      "SELECT * FROM users WHERE name = ?",
+      name
+    );
+    console.log(user);
+    if (!user) {
+      return res.code(404).send({ message: "User not found." });
+    }
+    return res.send(user);
+  } catch (err) {
+    console.error(err);
+    return res.code(500).send({ message: "Coudn't find user" });
   }
 };
