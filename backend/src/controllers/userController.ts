@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import type { JWTPayload, getNameInterface } from "../types/userTypes.js";
+import type { JWTPayload, getNameInterface, userPayload } from "../types/userTypes.js";
 import { jsendError, jsendFail, jsendSuccess } from "../utils/jsend.js";
 
 
@@ -13,8 +13,9 @@ export const getUsers = async (
   server: FastifyInstance
 ) => {
   try {
-    const users = await server.db.all("SELECT * FROM users");
-    res.code(200).send(jsendSuccess(users));
+    const result = await server.db.all("SELECT * FROM users");
+    const users = result.map(({password, ...users}) => users)
+    res.code(200).send(jsendSuccess({users}));
   } catch (err) {
     res.code(500).send(jsendError("coudn't get users"));
   }
@@ -30,14 +31,14 @@ export const getUserByName = async (
     res.code(400).send(jsendFail(null, "Username parameter is required."));
   }
   try {
-    const user = await server.db.get(
+    const result = await server.db.get(
       "SELECT * FROM users WHERE username = ?",
       username
     );
-    console.log(user);
-    if (!user) {
+    if (!result) {
       return res.code(404).send(jsendFail(null, "User not found."));
     }
+    const {password, ...user} = result
     return res.send(jsendSuccess({user}));
   } catch (err) {
     console.error(err);
@@ -53,10 +54,11 @@ export const getCurrentUser = async (
   try {
     const decoded = (await req.jwtDecode()) as JWTPayload;
     const { username, email } = decoded;
-    const user = await server.db.get("SELECT * FROM users WHERE username = ? AND email = ?", username, email);
-    if (!user) {
+    const result = await server.db.get("SELECT * FROM users WHERE username = ? AND email = ?", username, email) as userPayload;
+    if (!result) {
       return res.code(404).send(jsendFail("user not found"))
     }
+    const {password, ...user} = result
     return res.send(jsendSuccess({user}))
   } catch( err) {
     console.error(err);
