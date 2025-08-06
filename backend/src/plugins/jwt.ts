@@ -10,7 +10,10 @@ import type {
 export const jwtPlugin = fp(
   async (server: FastifyInstance, opts: FastifyPluginOptions) => {
     server.register(fastifyJwt, {
-      secret: process.env.JWT_SECRET || "supersecret",
+      secret: process.env.JWT_SECRET!,
+      sign: {
+        expiresIn: '1h' // this is the expiry time for the token
+      }
     });
 
     server.decorate(

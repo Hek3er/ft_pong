@@ -4,13 +4,17 @@ import { fpSqlitePlugin } from "fastify-sqlite-typed";
 import { handleRoutes } from "./routes/userRoutes.js";
 import { initDatabase } from "./config/db.js";
 import { jwtPlugin } from "./plugins/jwt.js";
+import { handleAuthRoutes } from "./routes/authRoutes.js";
+
+const versioning = "/api/v1/";
 
 dotenv.config();
 const server = fastify({ logger: true });
 
 server.register(fpSqlitePlugin, { dbFilename: "data.db" });
-server.register(jwtPlugin)
-server.register(handleRoutes, { prefix: "/api/v1" });
+server.register(jwtPlugin);
+server.register(handleRoutes, { prefix: versioning + "users" });
+server.register(handleAuthRoutes, { prefix: versioning + "auth" });
 
 const start = async () => {
   await server.ready();

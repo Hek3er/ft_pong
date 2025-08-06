@@ -1,29 +1,28 @@
-import type { FastifyInstance, FastifyRequest } from "fastify";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import {
-  createUser,
+  getCurrentUser,
   getUserByName,
   getUsers,
   healthcheck,
 } from "../controllers/userController.js";
-import type { loginSchemaType } from "../schemas/loginSchema.js";
 import type { getNameInterface } from "../types/userTypes.js";
 
 export const handleRoutes = (server: FastifyInstance) => {
   //should add the middleware to check for auth
-  server.get("/search/", { onRequest: [server.authenticate] }, (req, res) => {
+  server.get("/all", { onRequest: [server.authenticate] }, (req, res) => {
     getUsers(req, res, server);
   });
+
   server.get(
-    "/search/:username",
-    {onRequest: [server.authenticate]}
-    ,
+    "/:username",
+    { onRequest: [server.authenticate] },
     (req: FastifyRequest<{ Params: getNameInterface }>, res) => {
       getUserByName(req, res, server);
     }
   );
-  server.get("/healthcheck", healthcheck);
-  server.post("/", (req: FastifyRequest<{ Body: loginSchemaType }>, res) => {
-    createUser(req, res, server);
-  });
+
+  server.get("/me", {onRequest: [server.authenticate]}, (req: FastifyRequest, res: FastifyReply) => {
+    getCurrentUser(req, res, server)
+  })
   server.delete("/", () => {});
 };
