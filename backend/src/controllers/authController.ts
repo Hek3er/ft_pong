@@ -2,6 +2,7 @@ import type { FastifyRequest, FastifyReply, FastifyInstance } from "fastify";
 import { loginSchema, type loginSchemaType } from "../schemas/loginSchema.js";
 import { comparePassword, hashPassword } from "../utils/hashing.js";
 import type { userPayload } from "../types/userTypes.js";
+import { jsendError, jsendFail, jsendSuccess } from "../utils/jsend.js";
 
 export const createUser = async (
   req: FastifyRequest<{ Body: loginSchemaType }>,
@@ -14,7 +15,7 @@ export const createUser = async (
       path: issue.path.join("."),
       message: issue.message,
     }));
-    return res.code(400).send(errorMessages);
+    return res.code(400).send(jsendFail(errorMessages));
   }
   try {
     const { username, email, password } = req.body;
@@ -27,10 +28,10 @@ export const createUser = async (
       hash
     );
 
-    res.code(201).send({ message: "Success" });
+    res.code(201).send(jsendSuccess(null));
   } catch (err) {
     console.error(err);
-    res.code(500).send({ message: "failed to create user" });
+    res.code(500).send(jsendError("failed to create user"));
   }
 };
 
@@ -45,7 +46,7 @@ export const login = async (
       path: issue.path.join("."),
       message: issue.message,
     }));
-    return res.code(400).send(errorMessages);
+    return res.code(400).send(jsendFail(errorMessages));
   }
   try {
     const { username, email, password } = req.body;
@@ -55,17 +56,17 @@ export const login = async (
       email
     )) as userPayload;
     if (!user) {
-      return res.code(404).send({ message: "User not found" });
+      return res.code(404).send(jsendFail(null, "failed to find user"));
     }
     console.log(`=>>>>>>>>>>>> ${password} - ${user.password} - ${user}`)
     const compared = await comparePassword(password, user.password);
     if (!compared) {
-      return res.code(401).send({ message: "Password is wrong" });
+      return res.code(401).send(jsendFail(null, "password incorrect"));
     }
     const token = server.jwt.sign(user);
-    res.send({ token });
+    res.send(jsendSuccess({token}));
   } catch (err) {
     console.error(err);
-    res.code(500).send({ message: "Failed to sign in" });
+    res.code(500).send(jsendError("Failed to login", 500, {err}));
   }
 };

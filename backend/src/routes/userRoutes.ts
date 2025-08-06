@@ -9,7 +9,7 @@ import type { getNameInterface } from "../types/userTypes.js";
 
 export const handleRoutes = (server: FastifyInstance) => {
   //should add the middleware to check for auth
-  server.get("/all", { onRequest: [server.authenticate] }, (req, res) => {
+  server.get("/", { onRequest: [server.authenticate] }, (req, res) => {
     getUsers(req, res, server);
   });
 
