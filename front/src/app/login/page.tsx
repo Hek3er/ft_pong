@@ -4,15 +4,7 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginUser } from "./login";
 import { useState } from "react";
-
-interface Response {
-  status: string,
-  message?: string,
-  data?: {
-    token: string
-  },
-  code?: number
-}
+import { JSendResponse, LoginData } from "@/types/jsend";
 
 export default function login() {
   const [success, setSuccess] = useState(false)
@@ -20,13 +12,13 @@ export default function login() {
 
   const onSubmit: SubmitHandler<loginSchemaType> = async (data) => {
     console.log(data);
-    const result = await loginUser(data) as Response
+    const result = await loginUser(data) as JSendResponse<LoginData>
     if (result.status === "success") {
       setSuccess(true)
     } else {
       setSuccess(false)
     }
-    console.log(result.data!.token)
+    console.log(result.data.token)
   };
 
   return (
@@ -55,7 +47,7 @@ export default function login() {
           value="Login"
           className="border-1 rounded py-3 bg-blue-500 disabled:bg-blue-300"
         />
-        {success && (<div className="text-center">Logged in</div>)}
+        {success && (<div className="text-center text-green-500">Success</div>)}
       </form>
     </div>
   );
