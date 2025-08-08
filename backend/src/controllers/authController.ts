@@ -1,9 +1,10 @@
 import type { FastifyRequest, FastifyReply, FastifyInstance } from "fastify";
-import { loginSchema, type loginSchemaType } from "../schemas/loginSchema.js";
+import { loginSchema, type loginSchemaType, type signupSchemaType } from "../schemas/loginSchema.js";
 import { comparePassword, hashPassword } from "../utils/hashing.js";
 import type { userPayload } from "../types/userTypes.js";
 import { jsendError, jsendFail, jsendSuccess } from "../utils/jsend.js";
 import * as z from "zod"
+import removeKeys from "../utils/removeKeys.js";
 
 function mapZodErrorsToJsend(error: z.ZodError) {
     const fieldErrors: Record<string, string[]> = {};
@@ -24,7 +25,7 @@ function mapZodErrorsToJsend(error: z.ZodError) {
   
 
 export const createUser = async (
-  req: FastifyRequest<{ Body: loginSchemaType }>,
+  req: FastifyRequest<{ Body: signupSchemaType }>,
   res: FastifyReply,
   server: FastifyInstance
 ) => {
@@ -72,10 +73,9 @@ export const login = async (
     return res.code(400).send(jsendFail(errorMessages));
   }
   try {
-    const { username, email, password } = req.body;
+    const { email, password } = req.body;
     const user = (await server.db.get(
-      "SELECT * FROM users WHERE username = ? AND email = ? ",
-      username,
+      "SELECT * FROM users WHERE email = ? ",
       email
     )) as userPayload;
     if (!user) {
@@ -86,7 +86,8 @@ export const login = async (
     if (!compared) {
       return res.code(401).send(jsendFail(null, "password incorrect"));
     }
-    const token = server.jwt.sign(user);
+    const cleaned = removeKeys(user, ["password"])
+    const token = server.jwt.sign(cleaned);
     res.send(jsendSuccess({token}));
   } catch (err) {
     console.error(err);
