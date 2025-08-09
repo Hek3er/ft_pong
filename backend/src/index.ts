@@ -6,6 +6,7 @@ import { initDatabase } from "./config/db.js";
 import { jwtPlugin } from "./plugins/jwt.js";
 import { handleAuthRoutes } from "./routes/authRoutes.js";
 import corsPlugin from "./plugins/cors.js";
+import fastifyCookie from "@fastify/cookie";
 
 const versioning = "/api/v1/";
 
@@ -15,6 +16,14 @@ const server = fastify({ logger: true });
 server.register(fpSqlitePlugin, { dbFilename: "data.db" });
 server.register(corsPlugin)
 server.register(jwtPlugin);
+server.register(fastifyCookie, {
+  secret: process.env.COOKIE_SECRET!,
+  parseOptions: {
+    path: "/",
+    httpOnly: true,
+    maxAge: 60 * 60 * 1000
+  }
+})
 server.register(handleRoutes, { prefix: versioning + "users" });
 server.register(handleAuthRoutes, { prefix: versioning + "auth" });
 

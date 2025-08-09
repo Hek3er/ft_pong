@@ -13,7 +13,7 @@ const corsPlugin: FastifyPluginAsync = fp(async (fastify: FastifyInstance) => {
       cb(new Error("Not Allowed By Cors"), origin);
     },
     methods: ["GET", "PUT", "POST", "DELETE"],
-    credentials: false,
+    credentials: true,
   });
 });
 export default corsPlugin;

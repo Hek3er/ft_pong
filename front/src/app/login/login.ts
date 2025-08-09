@@ -8,6 +8,7 @@ export const loginUser = async (data: loginSchemaType) => {
       headers: {
         "Content-Type": "application/json"
       },
+      credentials: "include",
       body: JSON.stringify(data)
     })
     return await result.json()

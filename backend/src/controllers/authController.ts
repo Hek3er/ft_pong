@@ -88,6 +88,7 @@ export const login = async (
     }
     const cleaned = removeKeys(user, ["password"])
     const token = server.jwt.sign(cleaned);
+    res.setCookie("JWT", token)
     res.send(jsendSuccess({token}));
   } catch (err) {
     console.error(err);
